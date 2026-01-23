@@ -125,12 +125,13 @@ import { useAppContext } from '../../../context/AppContext';
 import { toast } from 'react-hot-toast';
 
 const AddBlog = () => {
-  const [isAdding, setIsAdding] = useState(false) // Default 'false' hai, jo sahi hai
+  const [isAdding, setIsAdding] = useState(false)
   const editorRef = useRef(null)
   const quillRef = useRef(null)
   const [image, setImage] = useState(false);
   const [title, setTitle] = useState('');
   const [SubTitle, setSubTitle] = useState('');
+  const [author, setAuthor] = useState('Admin'); // Default author name
   const [category, setcategory] = useState('Startup');
   const [isPublished, setisPublished] = useState(false);
 
@@ -143,8 +144,6 @@ const AddBlog = () => {
   const onSubmitHandler = async (e) => {
     e.preventDefault();
 
-    // --- YEH HAI FIX 1 ---
-    // API call shuru hote hi, button ko 'Adding...' par set karo
     setIsAdding(true);
 
     const description = quillRef.current.root.innerHTML;
@@ -156,7 +155,8 @@ const AddBlog = () => {
       subTitle: SubTitle,
       description,
       category,
-      isPublished
+      isPublished,
+      author
     }
 
     formData.append('blog', JSON.stringify(blogData));
@@ -173,7 +173,8 @@ const AddBlog = () => {
         setImage(false);
         setTitle('');
         setSubTitle('');
-        setcategory('');
+        setAuthor('Admin');
+        setcategory('Startup');
         quillRef.current.root.innerHTML = '';
       } else {
         toast.error(response.data.message);
@@ -181,12 +182,9 @@ const AddBlog = () => {
     } catch (error) {
       toast.error("Error adding blog: " + error.message);
     } finally {
-      // --- YEH HAI FIX 2 ---
-      // Chahe success ho ya fail, call khatam hone par button ko waapis 'Add Blog' kar do
       setIsAdding(false);
     }
   }
-  // --- FIX KHATAM ---
 
   useEffect(() => {
     if (!quillRef.current && editorRef.current) {
@@ -209,6 +207,9 @@ const AddBlog = () => {
         <p className='mt-4'>Sub title</p>
         <input type="text" placeholder='Type here' required className='w-full max-w-lg mt-2 p-2 border border-gray-300 outline-none rounded' onChange={(e) => setSubTitle(e.target.value)} value={SubTitle} />
 
+        <p className='mt-4'>Blog Author</p>
+        <input type="text" placeholder='Type here' required className='w-full max-w-lg mt-2 p-2 border border-gray-300 outline-none rounded' onChange={(e) => setAuthor(e.target.value)} value={author} />
+
         <p className='mt-4'>Blog Description</p>
         <div className='max-w-lg h-74 pb-16 sm:pb-10 pt-2 relative'>
           <div ref={editorRef}></div>
@@ -230,7 +231,6 @@ const AddBlog = () => {
           <p>Publish Now</p>
           <input type="checkbox" checked={isPublished} className='scale-125 cursor-pointer' onChange={e => setisPublished(e.target.checked)} />
         </div>
-        {/* Yeh button ab 'isAdding' state se control hoga */}
         <button disabled={isAdding} type="submit" className='mt-8 w-40 h-10 bg-blue-500 text-white rounded cursor-pointer text-sm disabled:bg-gray-400'>
           {isAdding ? 'Adding..' : 'Add Blog'}
         </button>

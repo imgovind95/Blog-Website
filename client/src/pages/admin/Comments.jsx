@@ -1,3 +1,4 @@
+import axios from 'axios';
 import React, { useEffect, useState } from 'react'
 import { comments_data } from '../../assets/assets'
 import CommentTableItem from '../../components/admin/CommentTableItem'
@@ -8,11 +9,17 @@ const Comments = () => {
   const [comments, setComments] = useState([])
   const [filter, setFilter] = useState()
 
-  const {axios} = useAppContext();
+  // FIX: Destructure url and token instead of axios
+  const { url, token } = useAppContext();
 
   const fetchComments = async () => {
     try {
-      const {data} = await axios.get('/api/admin/comments')
+      // FIX: Use imported axios and pass full URL with auth headers
+      const { data } = await axios.get(`${url}/api/admin/comments`, {
+        headers: {
+          Authorization: token
+        }
+      })
       data.success ? setComments(data.comments) : toast.error(data.message)
     } catch (error) {
       toast.error(error.message)
@@ -42,9 +49,9 @@ const Comments = () => {
             </tr>
           </thead>
           <tbody>
-              {comments.filter((comment)=>{
-                if(filter === "Approved") return comment.isApproved === true; return comment.isApproved===false;
-              }).map((comment,index)=> <CommentTableItem key={comment._id} comment={comment} index= {index+1} fetchComments={fetchComments}/>)}
+            {comments.filter((comment) => {
+              if (filter === "Approved") return comment.isApproved === true; return comment.isApproved === false;
+            }).map((comment, index) => <CommentTableItem key={comment._id} comment={comment} index={index + 1} fetchComments={fetchComments} />)}
           </tbody>
         </table>
       </div>

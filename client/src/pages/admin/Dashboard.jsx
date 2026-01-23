@@ -78,6 +78,7 @@
 // }
 
 // export default Dashboard
+import axios from 'axios'
 import React, { useEffect, useState } from 'react'
 import { assets, dashboard_data } from '../../assets/assets'
 import BlogTableItem from '../../components/admin/BlogTableItem'
@@ -93,11 +94,17 @@ const Dashboard = () => {
     recentBlogs: []
   })
 
-  const {axios} =useAppContext()
+  // FIX: Destructure url and token instead of axios
+  const { url, token } = useAppContext()
 
   const fetchDashboard = async () => {
     try {
-      const {data} = await axios.get('/api/admin/dashboard')
+      // FIX: Use imported axios and pass full URL with auth headers
+      const { data } = await axios.get(`${url}/api/admin/dashboard`, {
+        headers: {
+          Authorization: token
+        }
+      })
       data.success ? setDashboardData(data.dashboardData) : toast.error(data.message)
     } catch (error) {
       toast.error(error.message)
