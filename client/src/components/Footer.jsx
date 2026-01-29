@@ -38,7 +38,7 @@ const Footer = () => {
       </div>
 
       {/* Copyright text */}
-      <p className='py-4 text-center text-sm md:text-base text-gray-500/80'>Copyright 2025 © QuickBlog Govind - All Right Reserved.</p>
+      <p className='py-4 text-center text-sm md:text-base text-gray-500/80'>Copyright 2026 © QuickBlog Govind - All Right Reserved.</p>
     </div>
   )
 }
