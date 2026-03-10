@@ -6,7 +6,7 @@ import Comment from '../models/Comment.js';
 // Add Blog
 export const addBlog = async (req , res)=>{
     try{
-        const {title , subTitle , description, category, isPublished} = JSON.parse(req.body.blog);
+        const {title , subTitle , description, category, isPublished, author: authorName} = JSON.parse(req.body.blog);
         const imageFile = req.file;
         if(!title || !description || !category || !imageFile){
            return res.json({success: false, message : "Missing required fields"}) 
@@ -29,8 +29,8 @@ export const addBlog = async (req , res)=>{
         })
 
         const image = optimizedImageUrl;
-        // Use the admin's ID from auth middleware as the author
-        await Blog.create({title,subTitle,description,category,image,isPublished, author: req.adminId})
+        // Use the admin's ID from auth middleware as the author, and the typed name as authorName
+        await Blog.create({title,subTitle,description,category,image,isPublished, author: req.adminId, authorName: authorName || 'Admin'})
 
         res.json({success: true,message:"Blog added sucessfully"})
 
