@@ -7,7 +7,7 @@ const blogschema = new mongoose.Schema({
     category: {type: String , required: true},
     image: {type: String , required: true},
     isPublished: {type: Boolean , required: true},
-    author: {type: String, required: true, default: "Admin"}
+    author: {type: mongoose.Schema.Types.ObjectId, ref: 'Admin', required: true}
 },{timestamps:true})
 
 const Blog = mongoose.model('blog',blogschema);

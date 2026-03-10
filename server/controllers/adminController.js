@@ -59,7 +59,7 @@ export const adminLogin = async (req, res) => {
 
 export const getAllBlogsAdmin = async (req, res) => {
     try {
-       const blogs = await Blog.find({}).sort({createdAt: -1}) 
+       const blogs = await Blog.find({ author: req.adminId }).sort({createdAt: -1}) 
         res.json({success: true,blogs})
     } catch (error) {
         res.json({success: false,message:error.message}) 
@@ -68,7 +68,10 @@ export const getAllBlogsAdmin = async (req, res) => {
 
 export const getAllComments = async(req , res)=>{
     try {
-        const comments = await Comment.find({}).populate("blog").sort({createdAt: -1})
+        // First get all blog IDs belonging to this admin
+        const adminBlogs = await Blog.find({ author: req.adminId }).select('_id');
+        const blogIds = adminBlogs.map(b => b._id);
+        const comments = await Comment.find({ blog: { $in: blogIds } }).populate("blog").sort({createdAt: -1})
         res.json({success: true,comments})
     } catch (error) {
         res.json({success: false,message:error.message}) 
@@ -77,10 +80,15 @@ export const getAllComments = async(req , res)=>{
 
 export const getDashboard = async (req, res) => {
   try {
-    const recentBlogs = await Blog.find({}).sort({ createdAt: -1 }).limit(5);
-    const blogs = await Blog.countDocuments();
-    const comments = await Comment.countDocuments(); 
-    const drafts = await Blog.countDocuments({ isPublished: false });
+    const adminId = req.adminId;
+    const recentBlogs = await Blog.find({ author: adminId }).sort({ createdAt: -1 }).limit(5);
+    const blogs = await Blog.countDocuments({ author: adminId });
+    
+    // Count comments only on this admin's blogs
+    const adminBlogs = await Blog.find({ author: adminId }).select('_id');
+    const blogIds = adminBlogs.map(b => b._id);
+    const comments = await Comment.countDocuments({ blog: { $in: blogIds } }); 
+    const drafts = await Blog.countDocuments({ author: adminId, isPublished: false });
 
     const dashboardData = {
       blogs,
@@ -98,6 +106,11 @@ export const getDashboard = async (req, res) => {
 export const deleteCommentById = async (req, res) => {
   try {
     const { id } = req.body;
+    // Verify the comment belongs to one of this admin's blogs
+    const comment = await Comment.findById(id).populate('blog');
+    if (!comment || String(comment.blog.author) !== String(req.adminId)) {
+      return res.json({ success: false, message: "Unauthorized or comment not found" });
+    }
     await Comment.findByIdAndDelete(id);
     res.json({ success: true, message: "Comment deleted successfully" });
   } catch (error) {
@@ -108,6 +121,11 @@ export const deleteCommentById = async (req, res) => {
 export const approveCommentById = async (req, res) => {
   try {
     const { id } = req.body;
+    // Verify the comment belongs to one of this admin's blogs
+    const comment = await Comment.findById(id).populate('blog');
+    if (!comment || String(comment.blog.author) !== String(req.adminId)) {
+      return res.json({ success: false, message: "Unauthorized or comment not found" });
+    }
     await Comment.findByIdAndUpdate(id,{isApproved: true});
     res.json({ success: true, message: "Comment approved successfully" });
   } catch (error) {
