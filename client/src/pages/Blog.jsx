@@ -11,6 +11,59 @@ import Footer from '../components/Footer';
 const Blog = () => {
   const { id } = useParams();
   const [data, setData] = useState(null);
+  const [isTranslated, setIsTranslated] = useState(false);
+  const [translatedText, setTranslatedText] = useState('');
+  const [isTranslating, setIsTranslating] = useState(false);
+
+  const translateContent = async () => {
+    if (isTranslated) {
+      setIsTranslated(false);
+      return;
+    }
+
+    if (translatedText) {
+      setIsTranslated(true);
+      return;
+    }
+
+    setIsTranslating(true);
+    try {
+      // Strip HTML tags to get plain text
+      const tempDiv = document.createElement('div');
+      tempDiv.innerHTML = data.description;
+      const plainText = tempDiv.textContent || tempDiv.innerText || '';
+
+      // Split into chunks of 500 chars (MyMemory API limit)
+      const chunks = [];
+      const words = plainText.split(' ');
+      let current = '';
+      for (const word of words) {
+        if ((current + ' ' + word).length > 450) {
+          chunks.push(current.trim());
+          current = word;
+        } else {
+          current += ' ' + word;
+        }
+      }
+      if (current.trim()) chunks.push(current.trim());
+
+      // Translate each chunk
+      const translated = [];
+      for (const chunk of chunks) {
+        const res = await fetch(
+          `https://api.mymemory.translated.net/get?q=${encodeURIComponent(chunk)}&langpair=en|hi`
+        );
+        const result = await res.json();
+        translated.push(result.responseData.translatedText);
+      }
+
+      setTranslatedText(translated.join(' '));
+      setIsTranslated(true);
+    } catch (error) {
+      toast.error('Translation failed. Please try again.');
+    }
+    setIsTranslating(false);
+  };
   const [comments, setComments] = useState([]);
   const { url } = useAppContext();
 
@@ -84,16 +137,39 @@ const Blog = () => {
         </h1>
         <h2 className="my-5 max-w-lg truncate mx-auto">{data.subTitle}</h2>
         <p className="inline-block py-1 px-4 rounded-full mb-6 border text-sm border-primary/35 bg-primary/5 font-medium text-primary">
-          {data.author || "Admin"}
+          {data.author?.email || "Admin"}
         </p>
       </div>
 
       <div className="mx-5 max-w-5xl md:mx-auto my-10 mt-6">
         <img src={data.image} alt="" className="rounded-3xl mb-5" />
-        <div
-          className="rich-text max-w-3xl mx-auto"
-          dangerouslySetInnerHTML={{ __html: data.description }}
-        ></div>
+
+        {/* Translate Button */}
+        <div className="flex justify-center mb-6">
+          <button
+            onClick={translateContent}
+            disabled={isTranslating}
+            className="flex items-center gap-2 px-5 py-2.5 rounded-full border border-primary/30 bg-primary/5 hover:bg-primary/10 text-primary font-medium text-sm transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <span className="text-base">🌐</span>
+            {isTranslating
+              ? 'Translating...'
+              : isTranslated
+              ? 'Show Original (English)'
+              : 'Translate to Hindi (हिन्दी)'}
+          </button>
+        </div>
+
+        {isTranslated ? (
+          <div className="rich-text max-w-3xl mx-auto whitespace-pre-line text-gray-700 leading-relaxed">
+            {translatedText}
+          </div>
+        ) : (
+          <div
+            className="rich-text max-w-3xl mx-auto"
+            dangerouslySetInnerHTML={{ __html: data.description }}
+          ></div>
+        )}
 
         {/* Comments Section */}
         <div className="mt-14 mb-10 max-w-3xl mx-auto">

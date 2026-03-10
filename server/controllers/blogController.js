@@ -42,7 +42,7 @@ export const addBlog = async (req , res)=>{
 // Get All Blogs (public - shows only published)
 export const getAllBlogs = async (req , res)=>{
     try{
-        const blogs = await Blog.find({isPublished:true})
+        const blogs = await Blog.find({isPublished:true}).populate('author', 'email')
         res.json({success: true,blogs})
     }catch(error){
         res.json({success: false,message:error.message})
@@ -53,7 +53,7 @@ export const getAllBlogs = async (req , res)=>{
 export const getBlogById = async (req , res) =>{
     try{
         const {blogId} = req.params;
-        const blog = await Blog.findById(blogId)
+        const blog = await Blog.findById(blogId).populate('author', 'email')
         if(!blog){
             return res.json({success: false, message: "Blog not found"})
         }
