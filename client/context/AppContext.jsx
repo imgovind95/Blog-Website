@@ -5,7 +5,7 @@ export const AppContext = createContext();
 
 export const AppContextProvider = (props) => {
     // FIX: Backend URL ko port 4000 par set karein
-    const url = "http://localhost:4000";
+    const url = import.meta.env.VITE_BACKEND_URL || "http://localhost:4000";
     const [token, setToken] = useState(localStorage.getItem('token') || "");
     const [blogs, setBlogs] = useState([]);
     const [input, setInput] = useState('');
